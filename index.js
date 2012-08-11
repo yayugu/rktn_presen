@@ -1,192 +1,180 @@
-"use strict";
-
-// forked from os0x's "HTML slide" http://jsdo.it/os0x/slide
-
-var taplog = function(x) { console.log(x); return x; };
-
-var scaleCtx = function(ctx, ratioX, ratioY, block) {
+var drawTextWithCanvas, scaleCtx, setFont, taplog;
+taplog = function(x) {
+  console.log(x);
+  return x;
+};
+scaleCtx = function(ctx, ratioX, ratioY, block) {
   ctx.scale(ratioX, ratioY);
   block();
-  ctx.scale(1 / ratioX, 1 / ratioY);
+  return ctx.scale(1 / ratioX, 1 / ratioY);
 };
-
-var setFont = function(ctx, fontSize, fontName) {
-  ctx.font = fontSize + "px " + fontName;
+setFont = function(ctx, fontSize, fontName) {
+  return ctx.font = fontSize + "px " + fontName;
 };
-
-var drawTextWithCanvas = function(elem, options, fn) {
-
-  if (options === undefined) options = {};
-  // options and each value
-  var width = options.width || 300;
-  var height = options.height || 300;
-  var fontSize = options.fontSize || 16;
-  var font = options.font || 'myfont';
-  var lineHeight = options.lineHeight || 1.4;
-  var leftPadding = options.leftPadding || 5;
-  var fillStyle = options.fillStyle || "#FFFFFF";
-  
-  var lines = $(elem).text().split("\n");
-
-  var mainHeight = (lines.length - 1) * fontSize * lineHeight;
-  var canvas = $('<canvas>').attr({
+drawTextWithCanvas = function(elem, options, fn) {
+  var baseHeight, baseWidth, canvas, charWidth, ctx, fillStyle, font, fontSize, height, leftPadding, lineHeight, lines, mainHeight, width;
+  if (options != null) {
+    options = {};
+  }
+  width = options.width || 300;
+  height = options.height || 300;
+  fontSize = options.fontSize || 16;
+  font = options.font || "myfont";
+  lineHeight = options.lineHeight || 1.4;
+  leftPadding = options.leftPadding || 5;
+  fillStyle = options.fillStyle || "#FFFFFF";
+  lines = $(elem).text().split("\n");
+  mainHeight = (lines.length - 1) * fontSize * lineHeight;
+  canvas = $("<canvas>").attr({
     width: width,
     height: height
   });
-  var ctx = canvas[0].getContext('2d');
-
-  // scale canvas scale to 1024*768
-  var baseWidth = 1024;
-  var baseHeight = 768;
+  ctx = canvas[0].getContext("2d");
+  baseWidth = 1024;
+  baseHeight = 768;
   ctx.scale(width / baseWidth, height / baseHeight);
   width = baseWidth;
   height = baseHeight;
-
   setFont(ctx, fontSize, font);
   ctx.fillStyle = fillStyle;
   ctx.textBaseline = "middle";
-  var charWidth = ctx.measureText('a').width;
+  charWidth = ctx.measureText("a").width;
   _(lines).each(function(line, i) {
-    var y = i * fontSize * lineHeight;
-    var yCenter = y + (height - mainHeight) / 2;
-    var i;
-    var headSpaceWidth;
-    var ratio;
-    var lineWidth = ctx.measureText(line).width;
-    if (lineWidth > width) { // over full
-      // keep indent
+    var headSpaceWidth, lineWidth, ratio, y, yCenter;
+    y = i * fontSize * lineHeight;
+    yCenter = y + (height - mainHeight) / 2;
+    i = void 0;
+    headSpaceWidth = void 0;
+    ratio = void 0;
+    lineWidth = ctx.measureText(line).width;
+    if (lineWidth > width) {
       i = line.search(/[^ ]/);
       headSpaceWidth = charWidth * i;
       line = line.slice(i);
-
-      // demagnify width
       ratio = (width - headSpaceWidth - leftPadding) / ctx.measureText(line).width;
-      scaleCtx(ctx, ratio, 1, function() {
-        ctx.fillText(line, (leftPadding + headSpaceWidth) * (1 / ratio), yCenter);
+      return scaleCtx(ctx, ratio, 1, function() {
+        return ctx.fillText(line, (leftPadding + headSpaceWidth) * (1 / ratio), yCenter);
       });
     } else {
-      if (lines.length == 1) {
+      if (lines.length === 1) {
         ratio = _.min([width / lineWidth, height / fontSize]);
-        scaleCtx(ctx, ratio, ratio, function() {
-          var x = (width - lineWidth * ratio) / 2 / ratio;
-          var y =  height / 2 / ratio;
+        return scaleCtx(ctx, ratio, ratio, function() {
+          var x;
+          x = (width - lineWidth * ratio) / 2 / ratio;
+          y = height / 2 / ratio;
           console.log([x, y]);
-          ctx.fillText(line, x, y);
+          return ctx.fillText(line, x, y);
         });
       } else {
-        ctx.fillText(line, leftPadding, yCenter);
+        return ctx.fillText(line, leftPadding, yCenter);
       }
     }
   });
-  $(elem).empty().append(canvas);
+  return $(elem).empty().append(canvas);
 };
-
 $(function() {
-
-  var next = function(){
+  var SL, SR, SV, count, current, height, i, m, next, prev, root, slides, width;
+  next = function() {
     slides[current++].className = SL;
     slides[current].className = SV;
-    location.hash = 'Page'+current;
+    return location.hash = "Page" + current;
   };
-  var prev = function(){
+  prev = function() {
     slides[current--].className = SR;
     slides[current].className = SV;
-    location.hash = 'Page'+current;
+    return location.hash = "Page" + current;
   };
-
-  document.body.onclick = function(e){
-    var ev = e||window.event;
-    var x = ev.clientX;
-    if (width*0.95 < x && slides[current+1]){
-      //右余白がクリックされたとき
-      next();
-    } else if (width*0.05 > x && slides[current-1]) {
-      //左余白がクリックされたとき
-      prev();
+  document.body.onclick = function(e) {
+    var ev, x;
+    ev = e || window.event;
+    x = ev.clientX;
+    if (width * 0.95 < x && slides[current + 1]) {
+      return next();
+    } else {
+      if (width * 0.05 > x && slides[current - 1]) {
+        return prev();
+      }
     }
   };
-
   (function() {
-    var mousewheel = function(e){
-      var Down = -1, Up = 1;
-      var ev = e||window.event;
-      var dir = ev.wheelDelta || -ev.detail;
-      dir = dir < 0 ? Down : Up;
-      if (dir === Down && slides[current+1]){
-        next();
-      } else if (dir === Up && slides[current-1]) {
-        prev();
+    var mousewheel;
+    mousewheel = function(e) {
+      var Down, Up, dir, ev;
+      Down = -1;
+      Up = 1;
+      ev = e || window.event;
+      dir = ev.wheelDelta || -ev.detail;
+      dir = (dir < 0 ? Down : Up);
+      if (dir === Down && slides[current + 1]) {
+        return next();
+      } else {
+        if (dir === Up && slides[current - 1]) {
+          return prev();
+        }
       }
     };
-    if (document.body.onmousewheel !== void 0 || window.opera){
-      // onmousewheelが使えるか判定(Firefox以外はこちら)
-      document.body.onmousewheel = mousewheel;
+    if (document.body.onmousewheel !== void 0 || window.opera) {
+      return document.body.onmousewheel = mousewheel;
     } else {
-      // 実質Firefox用の処理。onmousewheelをサポートしたら上の処理だけで済むようになるはず
-      document.body.addEventListener('DOMMouseScroll', mousewheel, false);
+      return document.body.addEventListener("DOMMouseScroll", mousewheel, false);
     }
-  }());
-
-  document.onkeydown = function(evt){
-    var J = 74, K = 75, Left = 37, Right = 39;
+  })();
+  document.onkeydown = function(evt) {
+    var J, K, Left, Right;
+    J = 74;
+    K = 75;
+    Left = 37;
+    Right = 39;
     if (!evt) {
       evt = window.event;
     }
-    if ((evt.keyCode === K || evt.keyCode === Left) && slides[current-1]){// k
+    if ((evt.keyCode === K || evt.keyCode === Left) && slides[current - 1]) {
       prev();
       return false;
-    } else if ((evt.keyCode === J || evt.keyCode === Right) && slides[current+1]) {// j
+    } else if ((evt.keyCode === J || evt.keyCode === Right) && slides[current + 1]) {
       next();
       return false;
     }
   };
-
-  // まずはページ幅取得
-  var width = document.documentElement.clientWidth;
-  var height = document.documentElement.clientHeight;
-  document.body.className = 'slidemode';
-  // フォントサイズ調整
-  document.body.style.fontSize = width / 5 + '%';
-
-  var SV = 'slide view';
-  var SR = 'slide right';
-  var SL = 'slide left';
-  var root = $('<div id="slide">');
-  var slides = $('.slides')[0].innerHTML.trim().split("\n\n");
+  width = document.documentElement.clientWidth;
+  height = document.documentElement.clientHeight;
+  document.body.className = "slidemode";
+  document.body.style.fontSize = width / 5 + "%";
+  SV = "slide view";
+  SR = "slide right";
+  SL = "slide left";
+  root = $("<div id=\"slide\">");
+  slides = $(".slides")[0].innerHTML.trim().split("\n\n");
   slides = _(slides).map(function(text) {
-    var s = $('<div>').attr('class', SR);
+    var s;
+    s = $("<div>").attr("class", SR);
     s[0].innerHTML = text;
     root.append(s);
     return s[0];
   });
-  $('#slide').replaceWith(root);
-
-  //現在のページ
-  var current = 0;
-  var count = slides.length;
-
+  $("#slide").replaceWith(root);
+  current = 0;
+  count = slides.length;
   _(slides).each(function(slide) {
-    drawTextWithCanvas(slide, {
+    return drawTextWithCanvas(slide, {
       width: width * 0.88,
       height: height * 0.88,
-      fontSize: width / 10,
+      fontSize: width / 10
     });
   });
-  
-  var m;
-  if ((m = location.hash.match(/^#Page(\d+)$/))){
+  m = void 0;
+  if (m = location.hash.match(/^#Page(\d+)$/)) {
     current = +m[1];
-    for (var i = 0;i < current && slides[i];i++){
+    i = 0;
+    while (i < current && slides[i]) {
       slides[i].className = SL;
+      i++;
     }
     slides[current].className = SV;
   } else {
     slides[0].className = SV;
   }
-  
-  if(top == self){
-    document.body.className += ' top';
+  if (top === self) {
+    return document.body.className += " top";
   }
 });
-
-
