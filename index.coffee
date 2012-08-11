@@ -12,25 +12,35 @@ scaleCtx = (ctx, ratioX, ratioY, block) ->
 setFont = (ctx, fontSize, fontName) ->
   ctx.font = fontSize + "px " + fontName
 
-drawTextWithCanvas = (elem, options, fn) ->
-  options = {}  if options?
+isPageCode = (lines) ->
+  _(lines).any((line) ->
+    line.search(/[^ ]/)
+  )
+
+drawTextWithCanvas = (elem, options) ->
+  options = {} unless options?
   
   # options and each value
-  width = options.width or 300
-  height = options.height or 300
-  fontSize = options.fontSize or 16
+  width = options.width or 1024
+  height = options.height or 768
+  fontSize = options.fontSize or 80
   font = options.font or "myfont"
   lineHeight = options.lineHeight or 1.4
   leftPadding = options.leftPadding or 5
   fillStyle = options.fillStyle or "#FFFFFF"
   lines = $(elem).text().split("\n")
+
+  if isPageCode(lines)
+    font = "monospace"
+    fontSize = fontSize / 2
+  
   mainHeight = (lines.length - 1) * fontSize * lineHeight
   canvas = $("<canvas>").attr(
     width: width
     height: height
   )
   ctx = canvas[0].getContext("2d")
-  
+
   # scale canvas scale to 1024*768
   baseWidth = 1024
   baseHeight = 768
@@ -40,6 +50,7 @@ drawTextWithCanvas = (elem, options, fn) ->
   setFont ctx, fontSize, font
   ctx.fillStyle = fillStyle
   ctx.textBaseline = "middle"
+
   charWidth = ctx.measureText("a").width
   _(lines).each (line, i) ->
     y = i * fontSize * lineHeight
@@ -65,13 +76,31 @@ drawTextWithCanvas = (elem, options, fn) ->
         scaleCtx ctx, ratio, ratio, ->
           x = (width - lineWidth * ratio) / 2 / ratio
           y = height / 2 / ratio
-          console.log [x, y]
+          #console.log [x, y]
           ctx.fillText line, x, y
 
       else
         ctx.fillText line, leftPadding, yCenter
 
   $(elem).empty().append canvas
+
+dispatchPage = (elem, options) ->
+  str = elem.innerHTML
+  if /\!img/.test str
+    dispatchPageImg(elem, str, options)
+  else
+    drawTextWithCanvas(elem, options)
+
+dispatchPageImg = (elem, str, options) ->
+  fileURL = str.match(/\!img ([^ ]+)/)[1]
+  width = str.match(/\!img ([^ ]+) (.+)/)[2]
+  if width == 'auto'
+    width = options.width + "px"
+  ihtml = if width
+    $("<center><img src=\"#{fileURL}\" width=\"#{width}\"></center>")
+  else
+    $("<center><img src=\"#{fileURL}\"></center>")
+  $(elem).empty().append ihtml
 
 $ ->
   next = ->
@@ -95,26 +124,25 @@ $ ->
     #左余白がクリックされたとき
     else prev()  if width * 0.05 > x and slides[current - 1]
 
-  (->
-    mousewheel = (e) ->
-      Down = -1
-      Up = 1
-      ev = e or window.event
-      dir = ev.wheelDelta or -ev.detail
-      dir = (if dir < 0 then Down else Up)
-      if dir is Down and slides[current + 1]
-        next()
-      else prev()  if dir is Up and slides[current - 1]
+  mousewheel = (e) ->
+    Down = -1
+    Up = 1
+    ev = e or window.event
+    dir = ev.wheelDelta or -ev.detail
+    dir = (if dir < 0 then Down else Up)
+    if dir is Down and slides[current + 1]
+      next()
+    else prev()  if dir is Up and slides[current - 1]
 
-    if document.body.onmousewheel isnt undefined or window.opera
-      
-      # onmousewheelが使えるか判定(Firefox以外はこちら)
-      document.body.onmousewheel = mousewheel
-    else
-      
-      # 実質Firefox用の処理。onmousewheelをサポートしたら上の処理だけで済むようになるはず
-      document.body.addEventListener "DOMMouseScroll", mousewheel, false
-  )()
+  if document.body.onmousewheel isnt undefined or window.opera
+    
+    # onmousewheelが使えるか判定(Firefox以外はこちら)
+    document.body.onmousewheel = mousewheel
+  else
+    
+    # 実質Firefox用の処理。onmousewheelをサポートしたら上の処理だけで済むようになるはず
+    document.body.addEventListener "DOMMouseScroll", mousewheel, false
+
   document.onkeydown = (evt) ->
     J = 74
     K = 75
@@ -153,7 +181,7 @@ $ ->
   current = 0
   count = slides.length
   _(slides).each (slide) ->
-    drawTextWithCanvas slide,
+    dispatchPage slide,
       width: width * 0.88
       height: height * 0.88
       fontSize: width / 10

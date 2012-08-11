@@ -1,4 +1,4 @@
-var drawTextWithCanvas, scaleCtx, setFont, taplog;
+var dispatchPage, dispatchPageImg, drawTextWithCanvas, isPageCode, scaleCtx, setFont, taplog;
 taplog = function(x) {
   console.log(x);
   return x;
@@ -11,19 +11,28 @@ scaleCtx = function(ctx, ratioX, ratioY, block) {
 setFont = function(ctx, fontSize, fontName) {
   return ctx.font = fontSize + "px " + fontName;
 };
-drawTextWithCanvas = function(elem, options, fn) {
+isPageCode = function(lines) {
+  return _(lines).any(function(line) {
+    return line.search(/[^ ]/);
+  });
+};
+drawTextWithCanvas = function(elem, options) {
   var baseHeight, baseWidth, canvas, charWidth, ctx, fillStyle, font, fontSize, height, leftPadding, lineHeight, lines, mainHeight, width;
-  if (options != null) {
+  if (options == null) {
     options = {};
   }
-  width = options.width || 300;
-  height = options.height || 300;
-  fontSize = options.fontSize || 16;
+  width = options.width || 1024;
+  height = options.height || 768;
+  fontSize = options.fontSize || 80;
   font = options.font || "myfont";
   lineHeight = options.lineHeight || 1.4;
   leftPadding = options.leftPadding || 5;
   fillStyle = options.fillStyle || "#FFFFFF";
   lines = $(elem).text().split("\n");
+  if (isPageCode(lines)) {
+    font = "monospace";
+    fontSize = fontSize / 2;
+  }
   mainHeight = (lines.length - 1) * fontSize * lineHeight;
   canvas = $("<canvas>").attr({
     width: width,
@@ -62,7 +71,6 @@ drawTextWithCanvas = function(elem, options, fn) {
           var x;
           x = (width - lineWidth * ratio) / 2 / ratio;
           y = height / 2 / ratio;
-          console.log([x, y]);
           return ctx.fillText(line, x, y);
         });
       } else {
@@ -72,8 +80,27 @@ drawTextWithCanvas = function(elem, options, fn) {
   });
   return $(elem).empty().append(canvas);
 };
+dispatchPage = function(elem, options) {
+  var str;
+  str = elem.innerHTML;
+  if (/\!img/.test(str)) {
+    return dispatchPageImg(elem, str, options);
+  } else {
+    return drawTextWithCanvas(elem, options);
+  }
+};
+dispatchPageImg = function(elem, str, options) {
+  var fileURL, ihtml, width;
+  fileURL = str.match(/\!img ([^ ]+)/)[1];
+  width = str.match(/\!img ([^ ]+) (.+)/)[2];
+  if (width === 'auto') {
+    width = options.width + "px";
+  }
+  ihtml = width ? $("<center><img src=\"" + fileURL + "\" width=\"" + width + "\"></center>") : $("<center><img src=\"" + fileURL + "\"></center>");
+  return $(elem).empty().append(ihtml);
+};
 $(function() {
-  var SL, SR, SV, count, current, height, i, m, next, prev, root, slides, width;
+  var SL, SR, SV, count, current, height, i, m, mousewheel, next, prev, root, slides, width;
   next = function() {
     slides[current++].className = SL;
     slides[current].className = SV;
@@ -96,29 +123,26 @@ $(function() {
       }
     }
   };
-  (function() {
-    var mousewheel;
-    mousewheel = function(e) {
-      var Down, Up, dir, ev;
-      Down = -1;
-      Up = 1;
-      ev = e || window.event;
-      dir = ev.wheelDelta || -ev.detail;
-      dir = (dir < 0 ? Down : Up);
-      if (dir === Down && slides[current + 1]) {
-        return next();
-      } else {
-        if (dir === Up && slides[current - 1]) {
-          return prev();
-        }
-      }
-    };
-    if (document.body.onmousewheel !== void 0 || window.opera) {
-      return document.body.onmousewheel = mousewheel;
+  mousewheel = function(e) {
+    var Down, Up, dir, ev;
+    Down = -1;
+    Up = 1;
+    ev = e || window.event;
+    dir = ev.wheelDelta || -ev.detail;
+    dir = (dir < 0 ? Down : Up);
+    if (dir === Down && slides[current + 1]) {
+      return next();
     } else {
-      return document.body.addEventListener("DOMMouseScroll", mousewheel, false);
+      if (dir === Up && slides[current - 1]) {
+        return prev();
+      }
     }
-  })();
+  };
+  if (document.body.onmousewheel !== void 0 || window.opera) {
+    document.body.onmousewheel = mousewheel;
+  } else {
+    document.body.addEventListener("DOMMouseScroll", mousewheel, false);
+  }
   document.onkeydown = function(evt) {
     var J, K, Left, Right;
     J = 74;
@@ -156,7 +180,7 @@ $(function() {
   current = 0;
   count = slides.length;
   _(slides).each(function(slide) {
-    return drawTextWithCanvas(slide, {
+    return dispatchPage(slide, {
       width: width * 0.88,
       height: height * 0.88,
       fontSize: width / 10
