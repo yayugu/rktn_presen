@@ -27,21 +27,20 @@ h1,h2{
   top:5%;
   bottom:5%;
   left:5%;
-  background:#333;
+  background:#000;
   color:#fff;
   text-shadow:rgba(0,0,0,0.1) 1px 1px;
   letter-spacing: 0.15em;
   padding:1%;
   height:0%;
   overflow:hidden;
-  width:88%;
+  /*width:88%;*/
   opacity:0;
   -webkit-transform-origin: left bottom;
   -moz-transform-origin: left bottom;
   -o-transform-origin: left bottom;
   -ms-transform-origin: left bottom;
   transform-origin: left bottom;
-
 }
 .slidemode .slide.left{
   right:100%;

@@ -17,6 +17,25 @@ isPageCode = (lines) ->
     line.search(/[^ ]/)
   )
 
+biggerRatio = (width, height, ratioX, ratioY) ->
+  ratio2X = width / ratioX
+  ratio2Y = height / ratioY
+  if ratio2X > ratio2Y then 'x' else 'y'
+
+maxSizeWhenKeepAspectRatio = (width, height, ratioX, ratioY) ->
+  _biggerRatio = biggerRatio(width, height, ratioX, ratioY)
+  if _biggerRatio == 'x'
+    {
+      width: height / ratioY * ratioX
+      height: height
+    }
+  else
+    {
+      width: width
+      height: width / ratioY * ratioX
+    }
+
+
 drawTextWithCanvas = (elem, options) ->
   options = {} unless options?
   
@@ -24,7 +43,7 @@ drawTextWithCanvas = (elem, options) ->
   width = options.width or 1024
   height = options.height or 768
   fontSize = options.fontSize or 80 * 2
-  font = options.font or "HelveticaNeue, GothicMB101Pro-Bold"
+  font = options.font or "HelveticaNeue-Light, GothicMB101Pro-Light"
   lineHeight = options.lineHeight or 1.4
   leftPadding = options.leftPadding or 5
   fillStyle = options.fillStyle or "#FFFFFF"
@@ -35,16 +54,18 @@ drawTextWithCanvas = (elem, options) ->
     fontSize = fontSize / 2
   
   mainHeight = (lines.length - 1) * fontSize * lineHeight
+
+  baseWidth = 1024 * 2
+  baseHeight = 768 * 2
+
   canvas = $("<canvas>").attr(
-    width: width
-    height: height
+    width: baseWidth
+    height: baseHeight
+    style: 'width:' + width + 'px;' + 'height:' + height + 'px;' 
   )
   ctx = canvas[0].getContext("2d")
 
-  # scale canvas scale to 1024*768
-  baseWidth = 1024 * 2
-  baseHeight = 768 * 2
-  ctx.scale width / baseWidth, height / baseHeight
+  #ctx.scale width / baseWidth, height / baseHeight
   width = baseWidth
   height = baseHeight
   setFont ctx, fontSize, font
@@ -160,17 +181,26 @@ $ ->
   # まずはページ幅取得
   width = document.documentElement.clientWidth
   height = document.documentElement.clientHeight
+  size = maxSizeWhenKeepAspectRatio(width, height, 4, 3)
+  console.log(width)
+  console.log(height)
+  console.log(size)
   document.body.className = "slidemode"
+
+  # ひどい中央揃え
+  document.body.innerHTML += '<style>.slidemode .slide{left:' + ((width - size.width) / 2) + 'px}</style>'
   
   # フォントサイズ調整
-  document.body.style.fontSize = width / 5 + "%"
+  document.body.style.fontSize = size.width / 5 + "%"
   SV = "slide view"
   SR = "slide right"
   SL = "slide left"
   root = $("<div id=\"slide\">")
   slides = $(".slides")[0].innerHTML.trim().split("\n\n")
   slides = _(slides).map((text) ->
-    s = $("<div>").attr("class", SR)
+    s = $("<div>")
+      .attr("class", SR)
+      .attr('width', size.width)
     s[0].innerHTML = text
     root.append s
     s[0]
@@ -182,9 +212,9 @@ $ ->
   count = slides.length
   _(slides).each (slide) ->
     dispatchPage slide,
-      width: width * 0.88
-      height: height * 0.88
-      fontSize: width / 10 * 2
+      width: size.width * 0.88
+      height: size.height * 0.88
+      fontSize: size.width / 10 * 2
 
 
   m = undefined
