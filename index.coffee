@@ -23,8 +23,8 @@ drawTextWithCanvas = (elem, options) ->
   # options and each value
   width = options.width or 1024
   height = options.height or 768
-  fontSize = options.fontSize or 80
-  font = options.font or "myfont"
+  fontSize = options.fontSize or 80 * 2
+  font = options.font or "HelveticaNeue, GothicMB101Pro-Bold"
   lineHeight = options.lineHeight or 1.4
   leftPadding = options.leftPadding or 5
   fillStyle = options.fillStyle or "#FFFFFF"
@@ -42,8 +42,8 @@ drawTextWithCanvas = (elem, options) ->
   ctx = canvas[0].getContext("2d")
 
   # scale canvas scale to 1024*768
-  baseWidth = 1024
-  baseHeight = 768
+  baseWidth = 1024 * 2
+  baseHeight = 768 * 2
   ctx.scale width / baseWidth, height / baseHeight
   width = baseWidth
   height = baseHeight
@@ -184,7 +184,7 @@ $ ->
     dispatchPage slide,
       width: width * 0.88
       height: height * 0.88
-      fontSize: width / 10
+      fontSize: width / 10 * 2
 
 
   m = undefined

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>rktn presen</title>
+
+<link rel="stylesheet" type="text/css" media="screen,print" href="style.css" />
+</head>
+<body>
+<!-- Licensed under MIT License - http://www.opensource.org/licenses/mit-license.php -->
+<div class="slides">
+
+テストとかの話
+
+矢口裕也
+(@yayugu)
+
+「みんなー
+テスト書いてる？」
+
+みたいなの飽きたよね
+
+今日は
+TDDとBDDとAgileとかの開発スタイル
+と
+テスト哲学の話を
+
+しません
+
+Testing Framework
+の話をします
+
+自分の話
+
+さいきんRubyだと
+minitest使ってる
+
+iOSだと
+SenTestingKit
+
+何を考えて
+これらを選んだのか
+
+Testing Framework
+
+大きく分けて2つ
+
+xUnit
+xSpec
+
+xUnit
+
+class TestInteger < UnitTest
+  def test_add
+    assert_equal(2, 1 + 1)
+  end
+end
+
+xSpec
+
+describe Integer
+  context 'when add 2 numbers' do
+    it 'should return sum' do
+      2.should eq(1 + 1)
+      expect(2).to be eq(1 + 1)
+    end
+  end
+end
+
+この2つを比較
+
+※思想とかは考えない
+
+比較方法
+
+機能でそれぞれ2つの
+パーツに分類してから比較
+
+xUnit
+ - test class
+  class TestHoge, def test_hoge
+ - assertion
+  assert_equalとか
+
+xSpec
+ - behavior
+  describe, context, it
+ - expectation
+  should, expect
+
+①機能の違い
+②表記の違い
+③実装の違い
+
+assertionとexpectation
+→同じもの
+
+test classとbehavior
+→振る舞いの階層化ができるか
+
+②表記の違い
+
+assertionと
+expectationに
+ついてのみ比較
+
+参考フレームワーク：
+Ruby
+ - minitest
+ - RSpec
+Obj-C
+ - SenTestingKit
+ - Kiwi
+
+Ruby
+
+minitest
+
+ assert_equal(2, 1 + 1)
+
+RSpec
+(should)
+
+ (1 + 1).should eq(2)
+
+RSpec
+(expect)
+
+ expect(1 + 1).to eq(2)
+
+ assert_equal(2, 1 + 1)
+ (1 + 1).should eq(2)
+ expect(1 + 1).to eq(2)
+
+Obj-C
+
+SenTestingKit
+
+ STAssertEquals(2, 1 + 1);
+
+Kiwi
+(should)
+
+ [[foo should] equal:bar];
+
+Kiwi
+(expect)
+
+[[theValue(1 + 1) should]
+  equal:theValue(2)];
+
+ STAssertEquals(2, 1 + 1)
+ [[foo should] equal:bar];
+ [[theValue(1 + 1) should] equal:theValue(2)];
+
+表記の簡潔さ
+
+assert > should > expect
+
+③実装の違い
+
+assert
+の実装
+
+global or
+test classのインスタンスに
+assert関数を定義
+
+class UnitTest
+  def assert_equal(expect, actual)
+    if (expect == actual)
+      puts '.'
+    else
+      puts('F')
+    end
+  end
+end
+
+expectation
+の実装
+
+2スタイルある
+- should
+- expect
+
+should
+の実装
+
+RSpec
+
+BasicObject.module_eval do
+  def should(...)
+    ...
+  end
+end
+
+BasicObjectに
+shouldを追加!!!
+
+voodoo感ある
+
+Kiwi
+
+@interface NSObject (...)
+- (void)should;
+...
+@end
+
+NSObjectに
+カテゴリとして
+shouldを追加!!!
+
+voodoo感ある
+
+expect
+の実装
+
+RSpec
+
+::RSpec::Matchers.module_eval do
+  def should(...)
+    ...
+  end
+end
+
+BasicObjectオブジェクトを
+汚染しないため
+shouldよりmagic少ない
+
+toやeqの実装は
+面倒そう
+
+Kiwi
+
+#define theValue(expr) \
+({ \
+    ...
+    [KWValue valueWithBytes:...
+})
+
+Kiwiも
+同様
+
+実装の健全さ
+
+assert > expect > should
+
+まとめ
+
+-test class, behaviorの機能差
+　階層化できるか
+-assert, expectの機能差
+  なし
+-表記の簡潔さ
+ assert > should > expect
+-実装の健全さ
+ assert > expect > should
+
+使うべき
+Testing Framework
+
+階層化が不要：
+test class + assertion
+→ xUnit
+
+必要
+階層構造 + assertion
+→
+
+minitest
+Test::More subtest
+など
+
+を使うべき
+
+ここに書いたのは
+あくまで俺の考え
+
+「なんとなく」
+ではなくちゃんと考えて
+Testing Framework
+を選んで使おう
+
+Happy testing!
+
+</div>
+
+<div id="slide"></div>
+
+<script type="text/javascript" src="jquery-1.7.1.js"></script>
+<script type="text/javascript" src="underscore.js"></script>
+
+<script type="text/javascript" src="index.js"></script>
+</body>
+</html>
