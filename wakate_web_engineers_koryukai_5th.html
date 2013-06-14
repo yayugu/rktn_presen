@@ -30,17 +30,6 @@ TDDとBDDとAgileとかの開発スタイル
 Testing Framework
 の話をします
 
-自分の話
-
-さいきんRubyだと
-minitest使ってる
-
-iOSだと
-SenTestingKit
-
-何を考えて
-これらを選んだのか
-
 Testing Framework
 
 大きく分けて2つ
@@ -62,10 +51,51 @@ describe Integer
   context 'when add 2 numbers' do
     it 'should return sum' do
       2.should eq(1 + 1)
-      expect(2).to be eq(1 + 1)
+      expect(2).to eq(1 + 1)
     end
   end
 end
+
+ここで質問
+
+どっちが好き？
+
+xUnit
+
+xSpec
+
+ほうほう
+なんで？
+
+自分がなぜ
+そのテストフレームワークを
+好きか
+
+答えられる？
+
+みんなに言いたい
+
+自分が使う
+ツールのことを
+もっと良く知ろう
+
+フレームワークは
+よく考えて
+ちゃんと選ぼう
+
+自分の話
+
+さいきんRubyだと
+minitest使ってる
+
+iOSだと
+SenTestingKit
+
+何を考えて
+これらを選んだのか
+
+xUnit
+xSpec
 
 この2つを比較
 
@@ -259,11 +289,11 @@ assert > expect > should
 使うべき
 Testing Framework
 
-階層化が不要：
+A. 階層化が不要：
 test class + assertion
 → xUnit
 
-必要
+B. 必要：
 階層構造 + assertion
 →
 
@@ -272,6 +302,16 @@ Test::More subtest
 など
 
 を使うべき
+
+サンプルコード
+
+describe Integer
+  context 'when add 2 numbers' do
+    it 'should return sum' do
+      assert_equal(2, 1 + 1)
+    end
+  end
+end
 
 ここに書いたのは
 あくまで俺の考え
