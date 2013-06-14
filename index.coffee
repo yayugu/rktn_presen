@@ -50,7 +50,7 @@ drawTextWithCanvas = (elem, options) ->
   lines = $(elem).text().split("\n")
 
   if isPageCode(lines)
-    font = "monospace"
+    font = "Courier"
     fontSize = fontSize / 2
   
   mainHeight = (lines.length - 1) * fontSize * lineHeight
